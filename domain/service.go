@@ -5,6 +5,7 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/hikata101/climate_data_service/infrastructure"
+	"github.com/hikata101/climate_data_service/logger"
 
 	pb "github.com/hikata101/climate_data_service/gen/github.com/hikata101/climate_data_service/v1"
 	openmeteo "github.com/innotechdevops/openmeteo"
@@ -27,33 +28,31 @@ func DownloadDataset(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[
 			Elevation:      openmeteo.Float32(tmp.GetElevation()),
 			CurrentWeather: openmeteo.Bool(tmp.CurrentWeather),
 		}
-		fmt.Printf("Downloading OpenMeteo dataset with parameters: %+v\n", request_parameters)
+		logger.Logger.Debug(fmt.Sprintf("Downloading OpenMeteo dataset with parameters: %+v\n", request_parameters))
 		// Call the external API to get the data
 		resp, err := infrastructure.Execute(request_parameters)
 		if err != nil {
-			fmt.Println("Error executing OpenMeteo request:", err)
+			logger.Logger.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
 			stream.Send(&pb.DownloadReply{
 				Status: int32(codes.Unknown),
 			})
 			return err
 		}
-		print(resp)
+		// print(resp)
 		// Parse resp (JSON) into pb.OpenMeteoReply using jsonpb
 		// var parsed OpenMeteo_Response
 		var parsed pb.DownloadReply_OpenMeteo
 
 		// if err := json.Unmarshal([]byte(resp), &parsed); err != nil {
 		if err := jsonpb.UnmarshalString(resp, &parsed); err != nil {
-			fmt.Println("Error unmarshalling OpenMeteo response:", err)
+			logger.Logger.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
 			stream.Send(&pb.DownloadReply{
 				Status: int32(codes.Internal),
 			})
 			return err
 		}
-		fmt.Println("Parsed OpenMeteo response:", parsed)
-
 		// Send the parsed protobuf message back to the client
-		fmt.Println("Successfully parsed OpenMeteo response into protobuf")
+		logger.Logger.Debug("Successfully parsed OpenMeteo response into protobuf")
 		stream.Send(&pb.DownloadReply{
 			Status: int32(codes.OK),
 			Reply: &pb.DownloadReply_OpenMeteoReply{
@@ -61,7 +60,7 @@ func DownloadDataset(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[
 			},
 		})
 	default:
-		fmt.Println("Unknown download request type")
+		logger.Logger.Error("Unknown download request type")
 		return errors.New("unknown download request type")
 	}
 	return nil

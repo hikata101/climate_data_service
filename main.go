@@ -8,6 +8,7 @@ import (
 	"os/signal"
 
 	pb "github.com/hikata101/climate_data_service/gen/github.com/hikata101/climate_data_service/v1"
+	"github.com/hikata101/climate_data_service/logger"
 	"google.golang.org/grpc"
 
 	handler "github.com/hikata101/climate_data_service/interface"
@@ -19,13 +20,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	logger.Logger.Info("gRPC server is starting...")
 
 	s := grpc.NewServer()
 	server := handler.NewClimateDataServer()
 	pb.RegisterDatasetServer(s, &server)
 
 	go func() {
-		log.Printf("start gRPC server port: %v", port)
+		logger.Logger.Info(fmt.Sprintf("start gRPC server port: %v", port))
 		s.Serve(listener)
 	}()
 
