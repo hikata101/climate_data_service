@@ -1,0 +1,344 @@
+syntax = "proto3";
+package climate_data_service.v1;
+option go_package = "github.com/hikata101/climate_data_service/v1";
+
+service Dataset {
+  // Fan-out to multiple providers and stream back results in arrival order.
+  rpc Download (DownloadRequest) returns (stream DownloadReply);
+  rpc Upload(stream UploadChunk) returns (UploadReply);
+  rpc List(ListDatasetsRequest) returns (ListDatasetsReply);
+}
+
+enum ProvidersKind {
+  PROVIDER_KIND_UNKNOWN = 0;
+  PROVIDER_KIND_OPEN_METEO = 1;
+}
+
+message DownloadRequest {
+  // which provider to use
+  ProvidersKind provider = 1;
+  oneof request {
+    OpenMeteoRequest open_meteo = 2;
+  }
+}
+message DownloadReply {
+  int32 status = 1;
+  oneof reply {
+    DownloadReply_OpenMeteo open_meteo_reply = 2;
+  }
+}
+
+// Open-Meteo API request message
+message OpenMeteoRequest {
+  float latitude = 1;        // Latitude in decimal degrees
+  float longitude = 2;       // Longitude in decimal degrees
+  repeated Hourly hourly = 4; // Hourly weather variables (e.g., "temperature_2m", "relative_humidity_2m")
+  float elevation = 5;      // Elevation in meters
+  repeated Daily daily = 6;  // Daily weather variables (e.g., "temperature_2m_max", "precipitation_sum")
+  bool current_weather = 7; // Include current weather data
+  // TemperatureUnit temperature_unit = 8; // Temperature unit ("celsius" or "fahrenheit")
+  // WindSpeedUnit wind_speed_unit = 9; // Wind speed unit ("kmh", "ms", "mph", "kn")
+  // PrecipitationUnit precipitation_unit = 10; // Precipitation unit ("mm" or "inch")
+  // TimeFormat time_format = 11; // Time format ("iso8601" or "unixtime")
+  // TImezone timezone =12;        // Timezone (e.g., "auto", "Europe/Berlin", "UTC")
+  // PastDays past_days = 13;      // Number of past days to include
+  // ForecastDays forecast_days = 14; // Number of forecast days to include
+  string start_date = 15;      // Start date in YYYY-MM-DD format
+  string end_date = 16;        // End date in YYYY-MM-DD format
+  repeated string models= 17; // Weather models to use (e.g., "gfs", "icon", "ecmwf")
+  string cell_selection = 18;  // Cell selection (e.g., "auto", "Europe/Berlin", "UTC")
+  int32 timeout_ms = 19;       // Request timeout in milliseconds
+}
+
+enum Hourly {
+  HOURLY_UNDEFINED                  = 0;
+  HOURLY_TEMPERATURE_2M            = 1;
+	HOURLY_RELATIVE_HUMIDITY_2M       = 2;
+	HOURLY_DEW_POINT_2M               = 3;
+	HOURLY_APPARENT_TEMPERATURE      = 4;
+	HOURLY_PRESSURE_MSL              = 5;
+	HOURLY_SURFACE_PRESSURE          = 6;
+	HOURLY_CLOUDCOVER               = 7;
+	HOURLY_CLOUDCOVER_LOW           = 8;
+	HOURLY_CLOUDCOVER_MID           = 9;
+	HOURLY_CLOUDCOVER_HIGH          = 10;
+	HOURLY_WINDSPEED_10M            = 11;
+	HOURLY_WINDSPEED_80M            = 12;
+	HOURLY_WINDSPEED_120M           = 13;
+	HOURLY_WINDSPEED_180M           = 14;
+	HOURLY_WINDDIRECTION_10M        = 15;
+	HOURLY_WINDDIRECTION_80M        = 16;
+	HOURLY_WINDDIRECTION_120M       = 17;
+	HOURLY_WINDDIRECTION_180M       = 18;
+	HOURLY_WINDGUSTS_10M            = 19;
+	HOURLY_SHORTWAVE_RADIATION       = 20;
+	HOURLY_DIRECT_RADIATION          = 21;
+	HOURLY_DIRECT_NORMAL_IRRADIANCE   = 22;
+	HOURLY_DIFFUSE_RADIATION         = 23;
+	HOURLY_VAPOR_PRESSURE_DEFICIT     = 24;
+	HOURLY_CAPE                     = 25;
+	HOURLY_EVAPOTRANSPIRATION       = 26;
+	HOURLY_ET0_FAO_EVAPOTRANSPIRATION = 27;
+	HOURLY_PRECIPITATION            = 28;
+	HOURLY_SNOWFALL                 = 29;
+	HOURLY_PRECIPITATION_PROBABILITY = 30;
+	HOURLY_RAIN                     = 31;
+	HOURLY_SHOWERS                  = 32;
+	HOURLY_WEATHERCODE              = 33;
+	HOURLY_SNOW_DEPTH                = 34;
+	HOURLY_FREEZINGLEVEL_HEIGHT      = 35;
+	HOURLY_VISIBILITY               = 36;
+	HOURLY_SOIL_TEMPERATURE_0CM       = 37;
+	HOURLY_SOIL_TEMPERATURE_6CM       = 38;
+	HOURLY_SOIL_TEMPERATURE_18CM      = 39;
+	HOURLY_SOIL_TEMPERATURE_54CM      = 40;
+	HOURLY_SOIL_MOISTURE_01CM         = 41;
+	HOURLY_SOIL_MOISTURE_13CM         = 42;
+	HOURLY_SOIL_MOISTURE_39CM         = 43;
+	HOURLY_SOIL_MOISTURE_927CM        = 44;
+	HOURLY_SOIL_MOISTURE_2781CM       = 45;
+	HOURLY_IS_DAY                    = 46;
+}
+
+enum Daily {
+  DAILY_UNDEFINED                 = 0;
+  DAILY_TEMPERATURE_2M_MAX       = 1;
+  DAILY_TEMPERATURE_2M_MIN       = 2;
+  DAILY_APPARENT_TEMPERATURE_MAX = 4;
+  DAILY_APPARENT_TEMPERATURE_MIN = 5;
+  DAILY_PRECIPITATION_SUM        = 6;
+  DAILY_RAIN_SUM                 = 7;
+  DAILY_SHOWERS_SUM              = 8;
+  DAILY_SNOWFALL_SUM             = 9;
+  DAILY_PRECIPITATION_HOURS = 10;
+  DAILY_PRECIPITATION_PROBABILITY_MAX = 11;
+  DAILY_PRECIPITATION_PROBABILITY_MIN = 12;
+  DAILY_PRECIPITATION_PROBABILITY_MEAN = 13;
+  DAILY_WEATHERCODE = 14;
+  DAILY_SUNRISE = 15;
+  DAILY_SUNSET = 16;
+  DAILY_WIND_SPEED_10M_MAX       = 17;
+  DAILY_WIND_GUSTS_10M_MAX       = 18;
+  DAILY_WIND_DIRECTION_10M_DOMINANT = 19;
+  DAILY_SHORTWAVE_RADIATION_SUM      = 20;
+  DAILY_ET0_FAO_EVAPOTRANSPIRATION=21;
+  DAILY_UV_INDEX_MAX      = 22;
+  DAILY_UV_INDEX_CLEAR_SKY_MAX       = 23;
+}
+
+// Option A: oneof-style message where exactly one repeated-float array is populated.
+// This keeps the "oneof" exclusivity (only one daily variable is set).
+message OpenMeteoDaily {
+  repeated float temperature_2m_max = 1;
+  repeated float temperature_2m_min = 2;
+  repeated float apparent_temperature_max = 3;
+  repeated float apparent_temperature_min = 4;
+  repeated float precipitation_sum = 5;
+  repeated float rain_sum = 6;
+  repeated float showers_sum = 7;
+  repeated float snowfall_sum = 8;
+  repeated float precipitation_hours = 9;
+  repeated float precipitation_probability_max = 10;
+  repeated float precipitation_probability_min = 11;
+  repeated float precipitation_probability_mean = 12;
+  repeated float weathercode = 13;
+  repeated float sunrise = 14;
+  repeated float sunset = 15;
+  repeated float wind_speed_10m_max = 16;
+  repeated float wind_gusts_10m_max = 17;
+  repeated float wind_direction_10m_dominant = 18;
+  repeated float shortwave_radiation_sum = 19;
+  repeated float et0_fao_evapotranspiration = 20;
+  repeated float uv_index_max = 21;
+  repeated float uv_index_clear_sky_max = 22;
+}
+
+// Option B: compact, enum-driven message (mirrors the hourly pattern).
+// Use this if you prefer a single field for any daily variable plus an explicit enum.
+message OpenMeteoDailyReply {
+  Daily daily = 1;       // which daily variable this message contains
+  string unit = 2;       // unit name for the data (e.g., "mm", "°C", "hours", ...)
+  repeated float data = 3; // the values (one per day)
+}
+
+// Open-Meteo API response message
+
+message  OpenMeteoCurrentWeatherUnits {
+  string time = 1;
+  string interval = 2;
+  string temperature = 3;
+  string windspeed = 4;
+  string winddirection = 5;
+  string is_day = 6;
+  string weathercode = 7;
+}
+
+message OpenMeteoCurrentWeather {
+  string time = 1;
+  float interval = 2;
+  float temperature = 3;
+  float windspeed = 4;
+  float winddirection = 5;
+  float is_day = 6;
+  float weathercode = 7;
+}
+
+message OpenMeteoHourlyUnits {
+  string time = 1;
+  string temperature_2m = 2;
+  string relativehumidity_2m = 3;
+  string dewpoint_2m = 4;
+  string apparent_temperature = 5;
+  string pressure_msl = 6;
+  string surface_pressure = 7;
+  string cloudcover = 8;
+  string cloudcover_low = 9;
+  string cloudcover_mid = 10;
+  string cloudcover_high = 11;
+  string windspeed_10m = 12;
+  string windspeed_80m = 13;
+  string windspeed_120m = 14;
+  string windspeed_180m = 15;
+  string winddirection_10m = 16;
+  string winddirection_80m = 17;
+  string winddirection_120m = 18;
+  string winddirection_180m = 19;
+  string windgusts_10m = 20;
+  string shortwave_radiation = 21;
+  string direct_radiation = 22;
+  string direct_normal_irradiance = 23;
+  string diffuse_radiation = 24;
+  string vapor_pressure_deficit = 25;
+  string cape = 26;
+  string evapotranspiration = 27;
+  string et0_fao_evapotranspiration = 28;
+  string precipitation = 29;
+  string snowfall = 30;
+  string precipitation_probability = 31;
+  string rain = 32;
+  string showers = 33;
+  string weathercode = 34;
+  string snow_depth = 35;
+  string freezinglevel_height = 36;
+  string visibility = 37;
+  string soil_temperature_0cm = 38;
+  string soil_temperature_6cm = 39;
+  string soil_temperature_18cm = 40;
+  string soil_temperature_54cm = 41;
+  string soil_moisture_0_1cm = 42;
+  string soil_moisture_1_3cm = 43;
+  string soil_moisture_3_9cm = 44;
+  string soil_moisture_9_27cm = 45;
+  string soil_moisture_27_81cm = 46;
+  string is_day = 47;
+}
+
+message OpenMeteoHourly {
+  repeated string time = 1;
+  repeated float temperature_2m = 2;
+  repeated float relativehumidity_2m = 3;
+  repeated float dewpoint_2m = 4;
+  repeated float apparent_temperature = 5;
+  repeated float pressure_msl = 6;
+  repeated float surface_pressure = 7;
+  repeated float cloudcover = 8;
+  repeated float cloudcover_low = 9;
+  repeated float cloudcover_mid = 10;
+  repeated float cloudcover_high = 11;
+  repeated float windspeed_10m = 12;
+  repeated float windspeed_80m = 13;
+  repeated float windspeed_120m = 14;
+  repeated float windspeed_180m = 15;
+  repeated float winddirection_10m = 16;
+  repeated float winddirection_80m = 17;
+  repeated float winddirection_120m = 18;
+  repeated float winddirection_180m = 19;
+  repeated float windgusts_10m = 20;
+  repeated float shortwave_radiation = 21;
+  repeated float direct_radiation = 22;
+  repeated float direct_normal_irradiance = 23;
+  repeated float diffuse_radiation = 24;
+  repeated float vapor_pressure_deficit = 25;
+  repeated float cape = 26;
+  repeated float evapotranspiration = 27;
+  repeated float et0_fao_evapotranspiration = 28;
+  repeated float precipitation = 29;
+  repeated float snowfall = 30;
+  repeated float precipitation_probability = 31;
+  repeated float rain = 32;
+  repeated float showers = 33;
+  repeated float weathercode = 34;
+  repeated float snow_depth = 35;
+  repeated float freezinglevel_height = 36;
+  repeated float visibility = 37;
+  repeated float soil_temperature_0cm = 38;
+  repeated float soil_temperature_6cm = 39;
+  repeated float soil_temperature_18cm = 40;
+  repeated float soil_temperature_54cm = 41;
+  repeated float soil_moisture_0_1cm = 42;
+  repeated float soil_moisture_1_3cm = 43;
+  repeated float soil_moisture_3_9cm = 44;
+  repeated float soil_moisture_9_27cm = 45;
+  repeated float soil_moisture_27_81cm = 46;
+  repeated float is_day = 47;
+}
+
+message OpenMeteoHourlyReply {
+  Hourly hourly = 1;
+  string unit = 2;
+  repeated float data = 3;
+}
+
+message DownloadReply_OpenMeteo{
+  int32 status = 1;
+  float latitude = 2;
+  float longitude = 3;
+  float generationtime_ms = 4;
+  int32 utc_offset_seconds = 5;
+  string timezone = 6;
+  string timezone_abbreviation = 7;
+  float elevation = 8;
+  OpenMeteoCurrentWeatherUnits current_weather_units = 9;
+  OpenMeteoCurrentWeather current_weather = 10;
+  OpenMeteoHourlyUnits hourly_units = 11;
+  OpenMeteoHourly hourly = 12;
+}
+
+message ProviderResult {
+  ProvidersKind provider = 1;
+  int32 status = 2;
+  string body = 3; // JSON string for simplicity
+}
+
+message HealthRequest {}
+message HealthReply { string status = 1; }
+
+
+enum DatasetFormat {
+  DATASET_FORMAT_UNKNOWN = 0;
+  DATASET_FORMAT_CSV     = 1;
+  DATASET_FORMAT_NETCDF  = 2;
+  DATASET_FORMAT_JSON    = 3;
+}
+
+message DatasetMeta {
+  string id = 1;         // server-assigned (UUID)
+  string name = 2;       // client-provided filename/logical name
+  DatasetFormat format = 3;
+  int64 size_bytes = 4;
+  string path = 5;       // server-side storage path (opaque for client)
+  string created_at = 6; // RFC3339
+}
+
+// Client-streaming upload (chunked)
+message UploadChunk {
+  oneof body {
+    DatasetMeta meta = 1;   // MUST be sent first
+    bytes chunk = 2;        // raw bytes (arbitrary size chunks)
+  }
+}
+
+message UploadReply { DatasetMeta meta = 1; }
+
+message ListDatasetsRequest {}
+message ListDatasetsReply { repeated DatasetMeta items = 1; }
