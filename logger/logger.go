@@ -8,14 +8,10 @@ import (
 type logger struct {
 }
 
-func NewLogger() *logger {
-	return &logger{}
-}
-
 var Logger *logger
 
-func init() {
-	Logger = NewLogger()
+func NewLogger() {
+	Logger = &logger{}
 }
 
 func (l *logger) Info(message string) {
