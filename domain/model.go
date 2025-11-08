@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	pb "github.com/hikata101/climate_data_service/gen/github.com/hikata101/climate_data_service/v1"
+	climate_data "github.com/hikata101/climate_data"
 )
 
 type Dataset struct {
@@ -114,16 +114,16 @@ type OpenMeteoHourly struct {
 }
 
 type OpenMeteo_Response struct {
-	Status               int32                            `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
-	Latitude             float32                          `protobuf:"fixed32,2,opt,name=latitude,proto3" json:"latitude,omitempty"`
-	Longitude            float32                          `protobuf:"fixed32,3,opt,name=longitude,proto3" json:"longitude,omitempty"`
-	GenerationtimeMs     float32                          `protobuf:"fixed32,4,opt,name=generationtime_ms,json=generationtimeMs,proto3" json:"generationtime_ms,omitempty"`
-	UtcOffsetSeconds     int32                            `protobuf:"varint,5,opt,name=utc_offset_seconds,json=utcOffsetSeconds,proto3" json:"utc_offset_seconds,omitempty"`
-	Timezone             string                           `protobuf:"bytes,6,opt,name=timezone,proto3" json:"timezone,omitempty"`
-	TimezoneAbbreviation string                           `protobuf:"bytes,7,opt,name=timezone_abbreviation,json=timezoneAbbreviation,proto3" json:"timezone_abbreviation,omitempty"`
-	Elevation            float32                          `protobuf:"fixed32,8,opt,name=elevation,proto3" json:"elevation,omitempty"`
-	CurrentWeatherUnits  *pb.OpenMeteoCurrentWeatherUnits `protobuf:"bytes,9,opt,name=current_weather_units,json=currentWeatherUnits,proto3" json:"current_weather_units,omitempty"`
-	CurrentWeather       *pb.OpenMeteoCurrentWeather      `protobuf:"bytes,10,opt,name=current_weather,json=currentWeather,proto3" json:"current_weather,omitempty"`
-	HourlyUnits          *OpenMeteoHourlyUnits            `protobuf:"bytes,11,opt,name=hourly_units,json=hourlyUnits,proto3" json:"hourly_units,omitempty"`
-	Hourly               *OpenMeteoHourly                 `protobuf:"bytes,12,opt,name=hourly,proto3" json:"hourly,omitempty"`
+	Status               int32                                      `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	Latitude             float32                                    `protobuf:"fixed32,2,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude            float32                                    `protobuf:"fixed32,3,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	GenerationtimeMs     float32                                    `protobuf:"fixed32,4,opt,name=generationtime_ms,json=generationtimeMs,proto3" json:"generationtime_ms,omitempty"`
+	UtcOffsetSeconds     int32                                      `protobuf:"varint,5,opt,name=utc_offset_seconds,json=utcOffsetSeconds,proto3" json:"utc_offset_seconds,omitempty"`
+	Timezone             string                                     `protobuf:"bytes,6,opt,name=timezone,proto3" json:"timezone,omitempty"`
+	TimezoneAbbreviation string                                     `protobuf:"bytes,7,opt,name=timezone_abbreviation,json=timezoneAbbreviation,proto3" json:"timezone_abbreviation,omitempty"`
+	Elevation            float32                                    `protobuf:"fixed32,8,opt,name=elevation,proto3" json:"elevation,omitempty"`
+	CurrentWeatherUnits  *climate_data.OpenMeteoCurrentWeatherUnits `protobuf:"bytes,9,opt,name=current_weather_units,json=currentWeatherUnits,proto3" json:"current_weather_units,omitempty"`
+	CurrentWeather       *climate_data.OpenMeteoCurrentWeather      `protobuf:"bytes,10,opt,name=current_weather,json=currentWeather,proto3" json:"current_weather,omitempty"`
+	HourlyUnits          *OpenMeteoHourlyUnits                      `protobuf:"bytes,11,opt,name=hourly_units,json=hourlyUnits,proto3" json:"hourly_units,omitempty"`
+	Hourly               *OpenMeteoHourly                           `protobuf:"bytes,12,opt,name=hourly,proto3" json:"hourly,omitempty"`
 }

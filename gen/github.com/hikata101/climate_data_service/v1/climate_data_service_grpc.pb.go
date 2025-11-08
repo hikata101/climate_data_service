@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.14.0
-// source: proto/climate_data_service.proto
+// source: climate_data_service.proto
 
 package v1
 
@@ -194,5 +194,5 @@ var Dataset_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "proto/climate_data_service.proto",
+	Metadata: "climate_data_service.proto",
 }

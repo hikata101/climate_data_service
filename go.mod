@@ -4,8 +4,11 @@ go 1.24.10
 
 replace github.com/hikata101/climate_data_service/gen => ./gen
 
+replace github.com/hikata101/climate_data => ./gen/github.com/hikata101/climate_data
+
 require (
 	github.com/gogo/protobuf v1.3.2
+	github.com/hikata101/climate_data v0.0.0-00010101000000-000000000000
 	github.com/innotechdevops/openmeteo v1.0.1
 	github.com/pkg/errors v0.9.1
 	google.golang.org/grpc v1.76.0
