@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func DownloadDataset(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[pb.DownloadReply]) error {
+func DownloadDataset(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[pb.DownloadResponse]) error {
 	// Implement the logic to download the dataset here.
 	// For now, just print a message.
 	switch req.Request.(type) {
@@ -33,30 +33,30 @@ func DownloadDataset(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[
 		resp, err := infrastructure.Execute(request_parameters)
 		if err != nil {
 			logger.Logger.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
-			stream.Send(&pb.DownloadReply{
+			stream.Send(&pb.DownloadResponse{
 				Status: int32(codes.Unknown),
 			})
 			return err
 		}
 		// print(resp)
-		// Parse resp (JSON) into pb.OpenMeteoReply using jsonpb
+		// Parse resp (JSON) into pb.OpenMeteoResponse using jsonpb
 		// var parsed OpenMeteo_Response
-		var parsed pb.DownloadReply_OpenMeteo
+		var parsed pb.DownloadResponse_OpenMeteo
 
 		// if err := json.Unmarshal([]byte(resp), &parsed); err != nil {
 		if err := jsonpb.UnmarshalString(resp, &parsed); err != nil {
 			logger.Logger.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
-			stream.Send(&pb.DownloadReply{
+			stream.Send(&pb.DownloadResponse{
 				Status: int32(codes.Internal),
 			})
 			return err
 		}
 		// Send the parsed protobuf message back to the client
 		logger.Logger.Debug("Successfully parsed OpenMeteo response into protobuf")
-		stream.Send(&pb.DownloadReply{
+		stream.Send(&pb.DownloadResponse{
 			Status: int32(codes.OK),
-			Reply: &pb.DownloadReply_OpenMeteoReply{
-				OpenMeteoReply: &parsed,
+			Response: &pb.DownloadResponse_OpenMeteoResponse{
+				OpenMeteoResponse: &parsed,
 			},
 		})
 	default:

@@ -17,7 +17,7 @@ func NewClimateDataServer() climateDataServer {
 	return climateDataServer{}
 }
 
-func (s climateDataServer) Download(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[pb.DownloadReply]) error {
+func (s climateDataServer) Download(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[pb.DownloadResponse]) error {
 	logger.Logger.Info("Download request received")
 	err := domain.DownloadDataset(req, stream)
 	if err != nil {
@@ -28,13 +28,13 @@ func (s climateDataServer) Download(req *pb.DownloadRequest, stream grpc.ServerS
 	return nil
 }
 
-func (s climateDataServer) Upload(stream grpc.ClientStreamingServer[pb.UploadChunk, pb.UploadReply]) error {
+func (s climateDataServer) Upload(stream grpc.ClientStreamingServer[pb.UploadChunk, pb.UploadResponse]) error {
 	logger.Logger.Debug("Upload request received")
 	logger.Logger.Debug("Upload functionality not implemented yet")
 	return nil
 }
 
-func (s climateDataServer) List(ctx context.Context, req *pb.ListDatasetsRequest) (*pb.ListDatasetsReply, error) {
+func (s climateDataServer) List(ctx context.Context, req *pb.ListDatasetsRequest) (*pb.ListDatasetsResponse, error) {
 	logger.Logger.Debug("List request received")
 	logger.Logger.Debug("List functionality not implemented yet")
 	return nil, nil

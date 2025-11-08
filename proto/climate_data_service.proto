@@ -4,9 +4,9 @@ option go_package = "github.com/hikata101/climate_data_service/v1";
 
 service Dataset {
   // Fan-out to multiple providers and stream back results in arrival order.
-  rpc Download (DownloadRequest) returns (stream DownloadReply);
-  rpc Upload(stream UploadChunk) returns (UploadReply);
-  rpc List(ListDatasetsRequest) returns (ListDatasetsReply);
+  rpc Download (DownloadRequest) returns (stream DownloadResponse);
+  rpc Upload(stream UploadChunk) returns (UploadResponse);
+  rpc List(ListDatasetsRequest) returns (ListDatasetsResponse);
 }
 
 enum ProvidersKind {
@@ -21,10 +21,10 @@ message DownloadRequest {
     OpenMeteoRequest open_meteo = 2;
   }
 }
-message DownloadReply {
+message DownloadResponse {
   int32 status = 1;
-  oneof reply {
-    DownloadReply_OpenMeteo open_meteo_reply = 2;
+  oneof Response {
+    DownloadResponse_OpenMeteo open_meteo_response = 2;
   }
 }
 
@@ -155,7 +155,7 @@ message OpenMeteoDaily {
 
 // Option B: compact, enum-driven message (mirrors the hourly pattern).
 // Use this if you prefer a single field for any daily variable plus an explicit enum.
-message OpenMeteoDailyReply {
+message OpenMeteoDailyResponse {
   Daily daily = 1;       // which daily variable this message contains
   string unit = 2;       // unit name for the data (e.g., "mm", "°C", "hours", ...)
   repeated float data = 3; // the values (one per day)
@@ -283,13 +283,13 @@ message OpenMeteoHourly {
   repeated float is_day = 47;
 }
 
-message OpenMeteoHourlyReply {
+message OpenMeteoHourlyResponse {
   Hourly hourly = 1;
   string unit = 2;
   repeated float data = 3;
 }
 
-message DownloadReply_OpenMeteo{
+message DownloadResponse_OpenMeteo{
   int32 status = 1;
   float latitude = 2;
   float longitude = 3;
@@ -311,7 +311,7 @@ message ProviderResult {
 }
 
 message HealthRequest {}
-message HealthReply { string status = 1; }
+message HealthResponse { string status = 1; }
 
 
 enum DatasetFormat {
@@ -338,7 +338,7 @@ message UploadChunk {
   }
 }
 
-message UploadReply { DatasetMeta meta = 1; }
+message UploadResponse { DatasetMeta meta = 1; }
 
 message ListDatasetsRequest {}
-message ListDatasetsReply { repeated DatasetMeta items = 1; }
+message ListDatasetsResponse { repeated DatasetMeta items = 1; }
