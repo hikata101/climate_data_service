@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Dataset_Download_FullMethodName = "/climate_data_service.v1.Dataset/Download"
-	Dataset_Upload_FullMethodName   = "/climate_data_service.v1.Dataset/Upload"
-	Dataset_List_FullMethodName     = "/climate_data_service.v1.Dataset/List"
+	Dataset_DownloadDataset_FullMethodName = "/climate_data_service.v1.Dataset/DownloadDataset"
+	Dataset_UploadDataset_FullMethodName   = "/climate_data_service.v1.Dataset/UploadDataset"
+	Dataset_ListDatasets_FullMethodName    = "/climate_data_service.v1.Dataset/ListDatasets"
 )
 
 // DatasetClient is the client API for Dataset service.
@@ -29,9 +29,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DatasetClient interface {
 	// Fan-out to multiple providers and stream back results in arrival order.
-	Download(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadResponse], error)
-	Upload(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadChunk, UploadResponse], error)
-	List(ctx context.Context, in *ListDatasetsRequest, opts ...grpc.CallOption) (*ListDatasetsResponse, error)
+	DownloadDataset(ctx context.Context, in *DownloadDatasetRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadDatasetResponse], error)
+	UploadDataset(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadChunk, UploadResponse], error)
+	ListDatasets(ctx context.Context, in *ListDatasetsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadDatasetResponse], error)
 }
 
 type datasetClient struct {
@@ -42,13 +42,13 @@ func NewDatasetClient(cc grpc.ClientConnInterface) DatasetClient {
 	return &datasetClient{cc}
 }
 
-func (c *datasetClient) Download(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadResponse], error) {
+func (c *datasetClient) DownloadDataset(ctx context.Context, in *DownloadDatasetRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadDatasetResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &Dataset_ServiceDesc.Streams[0], Dataset_Download_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Dataset_ServiceDesc.Streams[0], Dataset_DownloadDataset_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[DownloadRequest, DownloadResponse]{ClientStream: stream}
+	x := &grpc.GenericClientStream[DownloadDatasetRequest, DownloadDatasetResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -59,11 +59,11 @@ func (c *datasetClient) Download(ctx context.Context, in *DownloadRequest, opts 
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Dataset_DownloadClient = grpc.ServerStreamingClient[DownloadResponse]
+type Dataset_DownloadDatasetClient = grpc.ServerStreamingClient[DownloadDatasetResponse]
 
-func (c *datasetClient) Upload(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadChunk, UploadResponse], error) {
+func (c *datasetClient) UploadDataset(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadChunk, UploadResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &Dataset_ServiceDesc.Streams[1], Dataset_Upload_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Dataset_ServiceDesc.Streams[1], Dataset_UploadDataset_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,26 +72,35 @@ func (c *datasetClient) Upload(ctx context.Context, opts ...grpc.CallOption) (gr
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Dataset_UploadClient = grpc.ClientStreamingClient[UploadChunk, UploadResponse]
+type Dataset_UploadDatasetClient = grpc.ClientStreamingClient[UploadChunk, UploadResponse]
 
-func (c *datasetClient) List(ctx context.Context, in *ListDatasetsRequest, opts ...grpc.CallOption) (*ListDatasetsResponse, error) {
+func (c *datasetClient) ListDatasets(ctx context.Context, in *ListDatasetsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadDatasetResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListDatasetsResponse)
-	err := c.cc.Invoke(ctx, Dataset_List_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Dataset_ServiceDesc.Streams[2], Dataset_ListDatasets_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[ListDatasetsRequest, DownloadDatasetResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Dataset_ListDatasetsClient = grpc.ServerStreamingClient[DownloadDatasetResponse]
 
 // DatasetServer is the server API for Dataset service.
 // All implementations must embed UnimplementedDatasetServer
 // for forward compatibility.
 type DatasetServer interface {
 	// Fan-out to multiple providers and stream back results in arrival order.
-	Download(*DownloadRequest, grpc.ServerStreamingServer[DownloadResponse]) error
-	Upload(grpc.ClientStreamingServer[UploadChunk, UploadResponse]) error
-	List(context.Context, *ListDatasetsRequest) (*ListDatasetsResponse, error)
+	DownloadDataset(*DownloadDatasetRequest, grpc.ServerStreamingServer[DownloadDatasetResponse]) error
+	UploadDataset(grpc.ClientStreamingServer[UploadChunk, UploadResponse]) error
+	ListDatasets(*ListDatasetsRequest, grpc.ServerStreamingServer[DownloadDatasetResponse]) error
 	mustEmbedUnimplementedDatasetServer()
 }
 
@@ -102,14 +111,14 @@ type DatasetServer interface {
 // pointer dereference when methods are called.
 type UnimplementedDatasetServer struct{}
 
-func (UnimplementedDatasetServer) Download(*DownloadRequest, grpc.ServerStreamingServer[DownloadResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method Download not implemented")
+func (UnimplementedDatasetServer) DownloadDataset(*DownloadDatasetRequest, grpc.ServerStreamingServer[DownloadDatasetResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method DownloadDataset not implemented")
 }
-func (UnimplementedDatasetServer) Upload(grpc.ClientStreamingServer[UploadChunk, UploadResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method Upload not implemented")
+func (UnimplementedDatasetServer) UploadDataset(grpc.ClientStreamingServer[UploadChunk, UploadResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method UploadDataset not implemented")
 }
-func (UnimplementedDatasetServer) List(context.Context, *ListDatasetsRequest) (*ListDatasetsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+func (UnimplementedDatasetServer) ListDatasets(*ListDatasetsRequest, grpc.ServerStreamingServer[DownloadDatasetResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method ListDatasets not implemented")
 }
 func (UnimplementedDatasetServer) mustEmbedUnimplementedDatasetServer() {}
 func (UnimplementedDatasetServer) testEmbeddedByValue()                 {}
@@ -132,41 +141,34 @@ func RegisterDatasetServer(s grpc.ServiceRegistrar, srv DatasetServer) {
 	s.RegisterService(&Dataset_ServiceDesc, srv)
 }
 
-func _Dataset_Download_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(DownloadRequest)
+func _Dataset_DownloadDataset_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(DownloadDatasetRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(DatasetServer).Download(m, &grpc.GenericServerStream[DownloadRequest, DownloadResponse]{ServerStream: stream})
+	return srv.(DatasetServer).DownloadDataset(m, &grpc.GenericServerStream[DownloadDatasetRequest, DownloadDatasetResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Dataset_DownloadServer = grpc.ServerStreamingServer[DownloadResponse]
+type Dataset_DownloadDatasetServer = grpc.ServerStreamingServer[DownloadDatasetResponse]
 
-func _Dataset_Upload_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(DatasetServer).Upload(&grpc.GenericServerStream[UploadChunk, UploadResponse]{ServerStream: stream})
+func _Dataset_UploadDataset_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DatasetServer).UploadDataset(&grpc.GenericServerStream[UploadChunk, UploadResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Dataset_UploadServer = grpc.ClientStreamingServer[UploadChunk, UploadResponse]
+type Dataset_UploadDatasetServer = grpc.ClientStreamingServer[UploadChunk, UploadResponse]
 
-func _Dataset_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListDatasetsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Dataset_ListDatasets_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListDatasetsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(DatasetServer).List(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Dataset_List_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DatasetServer).List(ctx, req.(*ListDatasetsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(DatasetServer).ListDatasets(m, &grpc.GenericServerStream[ListDatasetsRequest, DownloadDatasetResponse]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Dataset_ListDatasetsServer = grpc.ServerStreamingServer[DownloadDatasetResponse]
 
 // Dataset_ServiceDesc is the grpc.ServiceDesc for Dataset service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -174,22 +176,22 @@ func _Dataset_List_Handler(srv interface{}, ctx context.Context, dec func(interf
 var Dataset_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "climate_data_service.v1.Dataset",
 	HandlerType: (*DatasetServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "List",
-			Handler:    _Dataset_List_Handler,
-		},
-	},
+	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Download",
-			Handler:       _Dataset_Download_Handler,
+			StreamName:    "DownloadDataset",
+			Handler:       _Dataset_DownloadDataset_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "Upload",
-			Handler:       _Dataset_Upload_Handler,
+			StreamName:    "UploadDataset",
+			Handler:       _Dataset_UploadDataset_Handler,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "ListDatasets",
+			Handler:       _Dataset_ListDatasets_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "proto/climate_data_service.proto",

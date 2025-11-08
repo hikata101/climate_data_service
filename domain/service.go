@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/hikata101/climate_data_service/infrastructure"
@@ -14,11 +15,11 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func DownloadDataset(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[pb.DownloadResponse]) error {
+func DownloadDataset(req *pb.DownloadDatasetRequest, stream grpc.ServerStreamingServer[pb.DownloadDatasetResponse]) error {
 	// Implement the logic to download the dataset here.
 	// For now, just print a message.
 	switch req.Request.(type) {
-	case *pb.DownloadRequest_OpenMeteo:
+	case *pb.DownloadDatasetRequest_OpenMeteo:
 		// Handle OpenMeteo download requests
 		tmp := req.GetOpenMeteo()
 		request_parameters := openmeteo.Parameter{
@@ -33,35 +34,90 @@ func DownloadDataset(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[
 		resp, err := infrastructure.Execute(request_parameters)
 		if err != nil {
 			logger.Logger.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
-			stream.Send(&pb.DownloadResponse{
+			stream.Send(&pb.DownloadDatasetResponse{
 				Status: int32(codes.Unknown),
 			})
 			return err
 		}
-		// print(resp)
 		// Parse resp (JSON) into pb.OpenMeteoResponse using jsonpb
-		// var parsed OpenMeteo_Response
-		var parsed pb.DownloadResponse_OpenMeteo
+		var parsed pb.OpenMeteoDataset
 
 		// if err := json.Unmarshal([]byte(resp), &parsed); err != nil {
 		if err := jsonpb.UnmarshalString(resp, &parsed); err != nil {
 			logger.Logger.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
-			stream.Send(&pb.DownloadResponse{
+			stream.Send(&pb.DownloadDatasetResponse{
 				Status: int32(codes.Internal),
 			})
 			return err
 		}
 		// Send the parsed protobuf message back to the client
 		logger.Logger.Debug("Successfully parsed OpenMeteo response into protobuf")
-		stream.Send(&pb.DownloadResponse{
+		stream.Send(&pb.DownloadDatasetResponse{
 			Status: int32(codes.OK),
-			Response: &pb.DownloadResponse_OpenMeteoResponse{
-				OpenMeteoResponse: &parsed,
+			Response: &pb.DownloadDatasetResponse_OpenMeteoDataset{
+				OpenMeteoDataset: &parsed,
 			},
 		})
 	default:
 		logger.Logger.Error("Unknown download request type")
 		return errors.New("unknown download request type")
 	}
+	return nil
+}
+
+func ListDatasets(req *pb.ListDatasetsRequest, stream grpc.ServerStreamingServer[pb.DownloadDatasetResponse]) error {
+	wg := sync.WaitGroup{}
+	switch req.Request.(type) {
+	case *pb.ListDatasetsRequest_OpenMeteo:
+		// Handle OpenMeteo download requests
+		tmp := req.GetOpenMeteo()
+		request_parameters := openmeteo.Parameter{
+			Hourly:         convertHourlyParameters(tmp.GetHourly()),
+			Elevation:      openmeteo.Float32(tmp.GetElevation()),
+			CurrentWeather: openmeteo.Bool(tmp.CurrentWeather),
+		}
+		// Call the external API to get the data
+		locations := tmp.GetLocations()
+		logger.Logger.Debug(fmt.Sprintf("Listing OpenMeteo dataset with parameters: %+v\n", request_parameters))
+		for _, loc := range locations {
+			request_parameters.Latitude = openmeteo.Float32(loc.GetLatitude())
+			request_parameters.Longitude = openmeteo.Float32(loc.GetLongitude())
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				resp, err := infrastructure.Execute(request_parameters)
+				if err != nil {
+					logger.Logger.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
+					stream.Send(&pb.DownloadDatasetResponse{
+						Status: int32(codes.Unknown),
+					})
+				}
+				// Parse resp (JSON) into pb.OpenMeteoResponse using jsonpb
+				var parsed pb.OpenMeteoDataset
+
+				// if err := json.Unmarshal([]byte(resp), &parsed); err != nil {
+				if err := jsonpb.UnmarshalString(resp, &parsed); err != nil {
+					logger.Logger.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
+					stream.Send(&pb.DownloadDatasetResponse{
+						Status: int32(codes.Internal),
+					})
+				}
+
+				// Send the parsed protobuf message back to the client
+				logger.Logger.Debug("Successfully parsed OpenMeteo response into protobuf")
+				stream.Send(&pb.DownloadDatasetResponse{
+					Status: int32(codes.OK),
+					Response: &pb.DownloadDatasetResponse_OpenMeteoDataset{
+						OpenMeteoDataset: &parsed,
+					},
+				})
+			}()
+		}
+	default:
+		logger.Logger.Error("Unknown download request type")
+		return errors.New("unknown download request type")
+	}
+	wg.Wait()
+	logger.Logger.Debug("All dataset listings processed successfully")
 	return nil
 }

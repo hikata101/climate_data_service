@@ -4,9 +4,9 @@ option go_package = "github.com/hikata101/climate_data_service/v1";
 
 service Dataset {
   // Fan-out to multiple providers and stream back results in arrival order.
-  rpc Download (DownloadRequest) returns (stream DownloadResponse);
-  rpc Upload(stream UploadChunk) returns (UploadResponse);
-  rpc List(ListDatasetsRequest) returns (ListDatasetsResponse);
+  rpc DownloadDataset (DownloadDatasetRequest) returns (stream DownloadDatasetResponse);
+  rpc UploadDataset(stream UploadChunk) returns (UploadResponse);
+  rpc ListDatasets(ListDatasetsRequest) returns (stream DownloadDatasetResponse);
 }
 
 enum ProvidersKind {
@@ -14,17 +14,16 @@ enum ProvidersKind {
   PROVIDER_KIND_OPEN_METEO = 1;
 }
 
-message DownloadRequest {
-  // which provider to use
-  ProvidersKind provider = 1;
+message DownloadDatasetRequest {
+  ProvidersKind provider = 1; // may be deprecated in future
   oneof request {
     OpenMeteoRequest open_meteo = 2;
   }
 }
-message DownloadResponse {
+message DownloadDatasetResponse {
   int32 status = 1;
   oneof Response {
-    DownloadResponse_OpenMeteo open_meteo_response = 2;
+    OpenMeteoDataset open_meteo_dataset = 2;
   }
 }
 
@@ -289,7 +288,7 @@ message OpenMeteoHourlyResponse {
   repeated float data = 3;
 }
 
-message DownloadResponse_OpenMeteo{
+message OpenMeteoDataset{
   int32 status = 1;
   float latitude = 2;
   float longitude = 3;
@@ -309,10 +308,6 @@ message ProviderResult {
   int32 status = 2;
   string body = 3; // JSON string for simplicity
 }
-
-message HealthRequest {}
-message HealthResponse { string status = 1; }
-
 
 enum DatasetFormat {
   DATASET_FORMAT_UNKNOWN = 0;
@@ -340,5 +335,37 @@ message UploadChunk {
 
 message UploadResponse { DatasetMeta meta = 1; }
 
-message ListDatasetsRequest {}
+message ListDatasetsRequest {
+  ProvidersKind provider = 1; // may be deprecated in future
+  oneof request {
+    OpenMeteoRequests open_meteo = 2;
+  }
+}
+
+// Open-Meteo API request message
+message Location {
+  float latitude = 1;        // Latitude in decimal degrees
+  float longitude = 2;       // Longitude in decimal degrees
+}
+
+message OpenMeteoRequests {
+  repeated Location locations = 1;      // Location (latitude and longitude)
+  repeated Hourly hourly = 2; // Hourly weather variables (e.g., "temperature_2m", "relative_humidity_2m")
+  float elevation = 3;      // Elevation in meters
+  repeated Daily daily = 4;  // Daily weather variables (e.g., "temperature_2m_max", "precipitation_sum")
+  bool current_weather = 5; // Include current weather data
+  // TemperatureUnit temperature_unit = 6; // Temperature unit ("celsius" or "fahrenheit")
+  // WindSpeedUnit wind_speed_unit = 7; // Wind speed unit ("kmh", "ms", "mph", "kn")
+  // PrecipitationUnit precipitation_unit = 8; // Precipitation unit ("mm" or "inch")
+  // TimeFormat time_format = 9; // Time format ("iso8601" or "unixtime")
+  // TImezone timezone =10;        // Timezone (e.g., "auto", "Europe/Berlin", "UTC")
+  // PastDays past_days = 11;      // Number of past days to include
+  // ForecastDays forecast_days = 12; // Number of forecast days to include
+  string start_date = 13;      // Start date in YYYY-MM-DD format
+  string end_date = 14;        // End date in YYYY-MM-DD format
+  repeated string models= 15; // Weather models to use (e.g., "gfs", "icon", "ecmwf")
+  string cell_selection = 16;  // Cell selection (e.g., "auto", "Europe/Berlin", "UTC")
+  int32 timeout_ms = 17;       // Request timeout in milliseconds
+}
+
 message ListDatasetsResponse { repeated DatasetMeta items = 1; }

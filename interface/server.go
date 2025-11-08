@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"context"
-
 	"github.com/hikata101/climate_data_service/domain"
 	pb "github.com/hikata101/climate_data_service/gen/github.com/hikata101/climate_data_service/v1"
 	"github.com/hikata101/climate_data_service/logger"
@@ -17,7 +15,7 @@ func NewClimateDataServer() climateDataServer {
 	return climateDataServer{}
 }
 
-func (s climateDataServer) Download(req *pb.DownloadRequest, stream grpc.ServerStreamingServer[pb.DownloadResponse]) error {
+func (s climateDataServer) Download(req *pb.DownloadDatasetRequest, stream grpc.ServerStreamingServer[pb.DownloadDatasetResponse]) error {
 	logger.Logger.Info("Download request received")
 	err := domain.DownloadDataset(req, stream)
 	if err != nil {
@@ -28,14 +26,19 @@ func (s climateDataServer) Download(req *pb.DownloadRequest, stream grpc.ServerS
 	return nil
 }
 
-func (s climateDataServer) Upload(stream grpc.ClientStreamingServer[pb.UploadChunk, pb.UploadResponse]) error {
+func (s climateDataServer) UploadDataset(stream grpc.ClientStreamingServer[pb.UploadChunk, pb.UploadResponse]) error {
 	logger.Logger.Debug("Upload request received")
 	logger.Logger.Debug("Upload functionality not implemented yet")
 	return nil
 }
 
-func (s climateDataServer) List(ctx context.Context, req *pb.ListDatasetsRequest) (*pb.ListDatasetsResponse, error) {
+func (s climateDataServer) ListDatasets(req *pb.ListDatasetsRequest, stream grpc.ServerStreamingServer[pb.DownloadDatasetResponse]) error {
 	logger.Logger.Debug("List request received")
-	logger.Logger.Debug("List functionality not implemented yet")
-	return nil, nil
+	err := domain.ListDatasets(req, stream)
+	if err != nil {
+		logger.Logger.Error("Error processing list request: " + err.Error())
+		return err
+	}
+	logger.Logger.Debug("List functionality processed successfully")
+	return nil
 }
