@@ -33,9 +33,9 @@ message DownloadDatasetResponse {
 message OpenMeteoRequest {
   float latitude = 1;        // Latitude in decimal degrees
   float longitude = 2;       // Longitude in decimal degrees
-  repeated climate_data.Hourly hourly = 4; // Hourly weather variables (e.g., "temperature_2m", "relative_humidity_2m")
+  repeated climate_data.v1.Hourly hourly = 4; // Hourly weather variables (e.g., "temperature_2m", "relative_humidity_2m")
   float elevation = 5;      // Elevation in meters
-  repeated climate_data.Daily daily = 6;  // Daily weather variables (e.g., "temperature_2m_max", "precipitation_sum")
+  repeated climate_data.v1.Daily daily = 6;  // Daily weather variables (e.g., "temperature_2m_max", "precipitation_sum")
   bool current_weather = 7; // Include current weather data
   // TemperatureUnit temperature_unit = 8; // Temperature unit ("celsius" or "fahrenheit")
   // WindSpeedUnit wind_speed_unit = 9; // Wind speed unit ("kmh", "ms", "mph", "kn")
@@ -56,14 +56,14 @@ message OpenMeteoRequest {
 // Option B: compact, enum-driven message (mirrors the hourly pattern).
 // Use this if you prefer a single field for any daily variable plus an explicit enum.
 message OpenMeteoDailyResponse {
-  climate_data.Daily daily = 1;       // which daily variable this message contains
+  climate_data.v1.Daily daily = 1;       // which daily variable this message contains
   string unit = 2;       // unit name for the data (e.g., "mm", "°C", "hours", ...)
   repeated float data = 3; // the values (one per day)
 }
 
 
 message OpenMeteoHourlyResponse {
-  climate_data.Hourly hourly = 1;
+  climate_data.v1.Hourly hourly = 1;
   string unit = 2;
   repeated float data = 3;
 }
@@ -77,10 +77,10 @@ message OpenMeteoDataset{
   string timezone = 6;
   string timezone_abbreviation = 7;
   float elevation = 8;
-  climate_data.OpenMeteoCurrentWeatherUnits current_weather_units = 9;
-  climate_data.OpenMeteoCurrentWeather current_weather = 10;
-  climate_data.OpenMeteoHourlyUnits hourly_units = 11;
-  climate_data.OpenMeteoHourly hourly = 12;
+  climate_data.v1.OpenMeteoCurrentWeatherUnits current_weather_units = 9;
+  climate_data.v1.OpenMeteoCurrentWeather current_weather = 10;
+  climate_data.v1.OpenMeteoHourlyUnits hourly_units = 11;
+  climate_data.v1.OpenMeteoHourly hourly = 12;
 }
 
 message ProviderResult {
@@ -130,9 +130,9 @@ message Location {
 
 message OpenMeteoRequests {
   repeated Location locations = 1;      // Location (latitude and longitude)
-  repeated climate_data.Hourly hourly = 2; // Hourly weather variables (e.g., "temperature_2m", "relative_humidity_2m")
+  repeated climate_data.v1.Hourly hourly = 2; // Hourly weather variables (e.g., "temperature_2m", "relative_humidity_2m")
   float elevation = 3;      // Elevation in meters
-  repeated climate_data.Daily daily = 4;  // Daily weather variables (e.g., "temperature_2m_max", "precipitation_sum")
+  repeated climate_data.v1.Daily daily = 4;  // Daily weather variables (e.g., "temperature_2m_max", "precipitation_sum")
   bool current_weather = 5; // Include current weather data
   // TemperatureUnit temperature_unit = 6; // Temperature unit ("celsius" or "fahrenheit")
   // WindSpeedUnit wind_speed_unit = 7; // Wind speed unit ("kmh", "ms", "mph", "kn")

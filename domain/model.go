@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	climate_data "github.com/hikata101/climate_data"
+	climate_data "github.com/hikata101/climate_data/v1"
 )
 
 type Dataset struct {

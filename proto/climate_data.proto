@@ -1,6 +1,6 @@
 syntax = "proto3";
-package climate_data;
-option go_package = "github.com/hikata101/climate_data";
+package climate_data.v1;
+option go_package = "github.com/hikata101/climate_data/v1";
 
 enum Hourly {
   HOURLY_UNDEFINED                  = 0;

@@ -1,7 +1,7 @@
 package domain
 
 import (
-	climate_data "github.com/hikata101/climate_data"
+	climate_data "github.com/hikata101/climate_data/v1"
 	openmeteo "github.com/innotechdevops/openmeteo"
 )
 
