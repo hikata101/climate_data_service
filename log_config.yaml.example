@@ -1,0 +1,2 @@
+log_output: ./log/log.log
+level: "DEBUG"

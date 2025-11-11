@@ -2,11 +2,11 @@ package domain
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/hikata101/climate_data_service/infrastructure"
-	"github.com/hikata101/climate_data_service/logger"
 
 	pb "github.com/hikata101/climate_data_service/gen/github.com/hikata101/climate_data_service/v1"
 	openmeteo "github.com/innotechdevops/openmeteo"
@@ -29,11 +29,11 @@ func DownloadDataset(req *pb.DownloadDatasetRequest, stream grpc.ServerStreaming
 			Elevation:      openmeteo.Float32(tmp.GetElevation()),
 			CurrentWeather: openmeteo.Bool(tmp.CurrentWeather),
 		}
-		logger.Logger.Debug(fmt.Sprintf("Downloading OpenMeteo dataset with parameters: %+v\n", request_parameters))
+		slog.Debug(fmt.Sprintf("Downloading OpenMeteo dataset with parameters: %+v\n", request_parameters))
 		// Call the external API to get the data
 		resp, err := infrastructure.Execute(request_parameters)
 		if err != nil {
-			logger.Logger.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
+			slog.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
 			stream.Send(&pb.DownloadDatasetResponse{
 				Status: int32(codes.Unknown),
 			})
@@ -44,14 +44,14 @@ func DownloadDataset(req *pb.DownloadDatasetRequest, stream grpc.ServerStreaming
 
 		// if err := json.Unmarshal([]byte(resp), &parsed); err != nil {
 		if err := jsonpb.UnmarshalString(resp, &parsed); err != nil {
-			logger.Logger.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
+			slog.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
 			stream.Send(&pb.DownloadDatasetResponse{
 				Status: int32(codes.Internal),
 			})
 			return err
 		}
 		// Send the parsed protobuf message back to the client
-		logger.Logger.Debug("Successfully parsed OpenMeteo response into protobuf")
+		slog.Debug("Successfully parsed OpenMeteo response into protobuf")
 		stream.Send(&pb.DownloadDatasetResponse{
 			Status: int32(codes.OK),
 			Response: &pb.DownloadDatasetResponse_OpenMeteoDataset{
@@ -59,7 +59,7 @@ func DownloadDataset(req *pb.DownloadDatasetRequest, stream grpc.ServerStreaming
 			},
 		})
 	default:
-		logger.Logger.Error("Unknown download request type")
+		slog.Error("Unknown download request type")
 		return errors.New("unknown download request type")
 	}
 	return nil
@@ -78,7 +78,7 @@ func ListDatasets(req *pb.ListDatasetsRequest, stream grpc.ServerStreamingServer
 		}
 		// Call the external API to get the data
 		locations := tmp.GetLocations()
-		logger.Logger.Debug(fmt.Sprintf("Listing OpenMeteo dataset with parameters: %+v\n", request_parameters))
+		slog.Debug(fmt.Sprintf("Listing OpenMeteo dataset with parameters: %+v\n", request_parameters))
 		for _, loc := range locations {
 			request_parameters.Latitude = openmeteo.Float32(loc.GetLatitude())
 			request_parameters.Longitude = openmeteo.Float32(loc.GetLongitude())
@@ -87,7 +87,7 @@ func ListDatasets(req *pb.ListDatasetsRequest, stream grpc.ServerStreamingServer
 				defer wg.Done()
 				resp, err := infrastructure.Execute(request_parameters)
 				if err != nil {
-					logger.Logger.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
+					slog.Error(fmt.Sprintf("Error executing OpenMeteo request: %v", err))
 					stream.Send(&pb.DownloadDatasetResponse{
 						Status: int32(codes.Unknown),
 					})
@@ -97,14 +97,14 @@ func ListDatasets(req *pb.ListDatasetsRequest, stream grpc.ServerStreamingServer
 
 				// if err := json.Unmarshal([]byte(resp), &parsed); err != nil {
 				if err := jsonpb.UnmarshalString(resp, &parsed); err != nil {
-					logger.Logger.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
+					slog.Error(fmt.Sprintf("Error unmarshalling OpenMeteo response: %v", err))
 					stream.Send(&pb.DownloadDatasetResponse{
 						Status: int32(codes.Internal),
 					})
 				}
 
 				// Send the parsed protobuf message back to the client
-				logger.Logger.Debug("Successfully parsed OpenMeteo response into protobuf")
+				slog.Debug("Successfully parsed OpenMeteo response into protobuf")
 				stream.Send(&pb.DownloadDatasetResponse{
 					Status: int32(codes.OK),
 					Response: &pb.DownloadDatasetResponse_OpenMeteoDataset{
@@ -114,10 +114,10 @@ func ListDatasets(req *pb.ListDatasetsRequest, stream grpc.ServerStreamingServer
 			}()
 		}
 	default:
-		logger.Logger.Error("Unknown download request type")
+		slog.Error("Unknown download request type")
 		return errors.New("unknown download request type")
 	}
 	wg.Wait()
-	logger.Logger.Debug("All dataset listings processed successfully")
+	slog.Debug("All dataset listings processed successfully")
 	return nil
 }

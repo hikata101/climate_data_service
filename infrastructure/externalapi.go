@@ -1,7 +1,8 @@
 package infrastructure
 
 import (
-	"github.com/hikata101/climate_data_service/logger"
+	"log/slog"
+
 	openmeteo "github.com/innotechdevops/openmeteo"
 )
 
@@ -11,13 +12,13 @@ var counterCh chan int = make(chan int, maxRequests)
 func Execute(request openmeteo.Parameter) (string, error) {
 	counterCh <- 1
 	defer func() { <-counterCh }()
-	logger.Logger.Debug("Executing OpenMeteo API request")
+	slog.Debug("Executing OpenMeteo API request")
 	m := openmeteo.New()
 	resp, err := m.Execute(request)
 	if err != nil {
-		logger.Logger.Error(err.Error())
+		slog.Error(err.Error())
 		return "", err
 	}
-	logger.Logger.Debug("OpenMeteo API request executed successfully")
+	slog.Debug("OpenMeteo API request executed successfully")
 	return resp, nil
 }
